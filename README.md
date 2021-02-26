@@ -1,1 +1,1 @@
-# go-msx-rbac
+# go-msx-security
