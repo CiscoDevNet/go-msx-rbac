@@ -12,10 +12,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
-
 
 type User struct {
 	Permissions     []string `json:"permissions,omitempty"`
@@ -52,7 +53,7 @@ func (m *MsxSecurity) HasPermission(r *http.Request, perm string) (bool, User) {
 		return false, User{}
 	}
 	token = strings.Split(token, " ")[1]
-	return m.checkToken(token,perm)
+	return m.checkToken(token, perm)
 }
 
 func (m *MsxSecurity) checkToken(token string, perm string) (bool, User) {
@@ -71,15 +72,22 @@ func (m *MsxSecurity) checkToken(token string, perm string) (bool, User) {
 		}
 	}
 
-	url := fmt.Sprintf("%s/v2/check_token?token_type_hint=access_token&token=%s", m.Cfg.SsoURL, token)
+	endpoint := fmt.Sprintf("%s/v2/check_token?token_type_hint=access_token", m.Cfg.SsoURL)
 
-	req, err := http.NewRequest("POST", url, nil)
+	// token passed in via body
+	var formData = make(url.Values)
+	formData.Set("token", token)
+	var encodedFormData = formData.Encode()
+
+	req, err := http.NewRequest("POST", endpoint, strings.NewReader(encodedFormData))
 	if err != nil {
 		log.Printf("ERROR: %s", err.Error())
 		return false, user
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Connection", "close")
+	req.Header.Add("Content-Length", strconv.Itoa(len(encodedFormData)))
 	req.SetBasicAuth(m.Cfg.ClientID, m.Cfg.ClientSecret)
 	resp, err := m.Client.Do(req)
 	if err != nil {
