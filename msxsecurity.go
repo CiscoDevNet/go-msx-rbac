@@ -8,7 +8,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/allegro/bigcache"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/allegro/bigcache"
 )
 
 type User struct {
@@ -52,7 +53,12 @@ func (m *MsxSecurity) HasPermission(r *http.Request, perm string) (bool, User) {
 	if len(token) == 0 {
 		return false, User{}
 	}
-	token = strings.Split(token, " ")[1]
+
+	tokenStrings := strings.Split(token, " ")
+	if len(tokenStrings) > 2 {
+		token = tokenStrings[1]
+	}
+
 	return m.checkToken(token, perm)
 }
 
