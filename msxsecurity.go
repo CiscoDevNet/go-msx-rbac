@@ -55,7 +55,7 @@ func (m *MsxSecurity) HasPermission(r *http.Request, perm string) (bool, User) {
 	}
 
 	tokenStrings := strings.Split(token, " ")
-	if len(tokenStrings) > 2 {
+	if len(tokenStrings) > 1 {
 		token = tokenStrings[1]
 	}
 
