@@ -49,17 +49,17 @@ type MsxSecurity struct {
 
 // HasPermission will return true or false given an HTTP request and target permission.
 func (m *MsxSecurity) HasPermission(r *http.Request, perm string) (bool, User) {
-	token := r.Header.Get("Authorization")
-	if len(token) == 0 {
+	authHeader := r.Header.Get("Authorization")
+	if len(authHeader) == 0 {
+		return false, User{}
+	}
+	//follows "Bearer tokenvalue" pattern
+	authorization := strings.Split(authHeader, " ")
+	if len(authorization) < 1 {
 		return false, User{}
 	}
 
-	tokenStrings := strings.Split(token, " ")
-	if len(tokenStrings) > 1 {
-		token = tokenStrings[1]
-	}
-
-	return m.checkToken(token, perm)
+	return m.checkToken(authorization[1], perm)
 }
 
 func (m *MsxSecurity) checkToken(token string, perm string) (bool, User) {
